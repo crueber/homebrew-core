@@ -1,8 +1,8 @@
 class Libclc < Formula
   desc "Implementation of the library requirements of the OpenCL C programming language"
   homepage "https://libclc.llvm.org/"
-  url "https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/llvm-project-22.1.8.src.tar.xz"
-  sha256 "922f1817a0df7b1489272d18134ee0087a8b068828f87ac63b9861b1a9965888"
+  url "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.0/llvm-project-23.1.0.src.tar.xz"
+  sha256 "ab1f0e3ec52448c33e8782eaf0422504b87c7b016b22514653ee0d8fcee479ff"
   license "Apache-2.0" => { with: "LLVM-exception" }
   compatibility_version 1
 
@@ -24,10 +24,13 @@ class Libclc < Formula
   depends_on "llvm" => [:build, :test]
   depends_on "spirv-llvm-translator" => :build
 
+  fails_with :gcc
+
   def install
-    llvm_spirv = formula_opt_bin("spirv-llvm-translator")/"llvm-spirv"
     system "cmake", "-S", "libclc", "-B", "build",
-                    "-DLLVM_SPIRV=#{llvm_spirv}",
+                    "-DLLVM_SPIRV=#{formula_opt_bin("spirv-llvm-translator")/"llvm-spirv"}",
+                    # SPIR-V targets reject shim-injected flags like `-mbranch-protection` on arm64 Linux
+                    "-DCMAKE_CLC_COMPILER=#{formula_opt_bin("llvm")/"clang"}",
                     *std_cmake_args
     system "cmake", "--build", "build"
     system "cmake", "--install", "build"
